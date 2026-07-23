@@ -1,6 +1,5 @@
 package com.empowergym.app.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkMode
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme
