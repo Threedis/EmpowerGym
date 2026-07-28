@@ -26,6 +26,7 @@ import com.empowergym.app.ui.theme.SecondaryGreen
 @Composable
 fun MembersListScreen(onOpenMember: (String) -> Unit, onAddMember: () -> Unit) {
     var query by remember { mutableStateOf("") }
+    var pendingDelete by remember { mutableStateOf<Member?>(null) }
     val members = MemberRepository.members.filter {
         it.name.contains(query, ignoreCase = true) || it.id.contains(query, ignoreCase = true)
     }
@@ -51,17 +52,50 @@ fun MembersListScreen(onOpenMember: (String) -> Unit, onAddMember: () -> Unit) {
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 shape = RoundedCornerShape(10.dp)
             )
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                items(members) { member ->
-                    MemberRow(member) { onOpenMember(member.id) }
+
+            if (members.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Filled.GroupOff, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(48.dp))
+                        Spacer(Modifier.height(8.dp))
+                        Text("No members yet", color = Color.Gray)
+                        Text("Tap + to register your first member", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            } else {
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    items(members, key = { it.id }) { member ->
+                        MemberRow(
+                            member = member,
+                            onClick = { onOpenMember(member.id) },
+                            onDelete = { pendingDelete = member }
+                        )
+                    }
                 }
             }
         }
     }
+
+    pendingDelete?.let { member ->
+        AlertDialog(
+            onDismissRequest = { pendingDelete = null },
+            title = { Text("Delete member?") },
+            text = { Text("This will permanently remove ${member.name} (${member.id}). This can't be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    MemberRepository.deleteMember(member.id)
+                    pendingDelete = null
+                }) { Text("Delete", color = Color(0xFFD32F2F)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDelete = null }) { Text("Cancel") }
+            }
+        )
+    }
 }
 
 @Composable
-private fun MemberRow(member: Member, onClick: () -> Unit) {
+private fun MemberRow(member: Member, onClick: () -> Unit, onDelete: () -> Unit) {
     Card(
         modifier = Modifier.clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp)
@@ -85,6 +119,9 @@ private fun MemberRow(member: Member, onClick: () -> Unit) {
                     Spacer(Modifier.width(6.dp))
                     Chip(member.type.name.lowercase().replaceFirstChar { it.uppercase() }, SecondaryGreen)
                 }
+            }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Filled.Delete, contentDescription = "Delete member", tint = Color(0xFFD32F2F))
             }
             Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = Color.Gray)
         }

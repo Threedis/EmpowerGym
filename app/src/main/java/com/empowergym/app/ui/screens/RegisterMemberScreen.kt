@@ -1,5 +1,12 @@
 package com.empowergym.app.ui.screens
 
+import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -13,22 +20,67 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.empowergym.app.data.Member
 import com.empowergym.app.data.MemberRepository
 import com.empowergym.app.data.MembershipType
 import com.empowergym.app.data.PackageType
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterMemberScreen(onBack: () -> Unit, onRegistered: () -> Unit) {
+    val context = LocalContext.current
     var name by remember { mutableStateOf("") }
     var whatsapp by remember { mutableStateOf("") }
     var alternate by remember { mutableStateOf("") }
     var type by remember { mutableStateOf(MembershipType.CARDIO) }
     var pkg by remember { mutableStateOf(PackageType.MONTHLY) }
     val memberId = remember { MemberRepository.nextMemberId() }
+
+    // Holds the file path of the captured photo, if any
+    var photoPath by remember { mutableStateOf<String?>(null) }
+    var pendingCaptureFile by remember { mutableStateOf<File?>(null) }
+
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            photoPath = pendingCaptureFile?.absolutePath
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            val photosDir = File(context.cacheDir, "member_photos").apply { mkdirs() }
+            val file = File(photosDir, "photo_${System.currentTimeMillis()}.jpg")
+            pendingCaptureFile = file
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+            takePictureLauncher.launch(uri)
+        }
+    }
+
+    fun launchCamera() {
+        val hasPermission = ContextCompat.checkSelfPermission(
+            context, android.Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+        if (hasPermission) {
+            val photosDir = File(context.cacheDir, "member_photos").apply { mkdirs() }
+            val file = File(photosDir, "photo_${System.currentTimeMillis()}.jpg")
+            pendingCaptureFile = file
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+            takePictureLauncher.launch(uri)
+        } else {
+            cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -58,7 +110,7 @@ fun RegisterMemberScreen(onBack: () -> Unit, onRegistered: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Filled.CalendarMonth, contentDescription = null)
                 Spacer(Modifier.width(6.dp))
-                Text("23-Jul-2026")
+                Text(remember { SimpleDateFormat("dd-MMM-yyyy", Locale.US).format(Date()) })
             }
 
             Text("Membership Type *", fontWeight = FontWeight.Medium)
@@ -80,21 +132,33 @@ fun RegisterMemberScreen(onBack: () -> Unit, onRegistered: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                val bitmap = remember(photoPath) {
+                    photoPath?.let { path ->
+                        BitmapFactory.decodeFile(path)?.asImageBitmap()
+                    }
+                }
                 Box(
                     modifier = Modifier
                         .size(90.dp)
-                        .clip(CircleShape)
-                        .then(Modifier),
+                        .clip(CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Filled.Person, contentDescription = null, modifier = Modifier.size(60.dp), tint = Color.Gray)
+                    if (bitmap != null) {
+                        Image(
+                            bitmap = bitmap,
+                            contentDescription = "Captured member photo",
+                            modifier = Modifier.size(90.dp).clip(CircleShape)
+                        )
+                    } else {
+                        Icon(Icons.Filled.Person, contentDescription = null, modifier = Modifier.size(60.dp), tint = Color.Gray)
+                    }
                 }
-                Text("No Photo", color = Color.Gray)
+                Text(if (bitmap != null) "Photo captured" else "No Photo", color = Color.Gray)
                 Spacer(Modifier.height(8.dp))
-                OutlinedButton(onClick = { /* capture photo */ }) {
+                OutlinedButton(onClick = { launchCamera() }) {
                     Icon(Icons.Filled.CameraAlt, contentDescription = null)
                     Spacer(Modifier.width(6.dp))
-                    Text("Capture Photo")
+                    Text(if (bitmap != null) "Retake Photo" else "Capture Photo")
                 }
             }
 
@@ -107,9 +171,10 @@ fun RegisterMemberScreen(onBack: () -> Unit, onRegistered: () -> Unit) {
                                 name = name,
                                 whatsapp = whatsapp,
                                 alternate = alternate,
-                                joiningDate = "23 Jul 2026",
+                                joiningDate = SimpleDateFormat("dd MMM yyyy", Locale.US).format(Date()),
                                 type = type,
-                                pkg = pkg
+                                pkg = pkg,
+                                photoPath = photoPath
                             )
                         )
                         onRegistered()

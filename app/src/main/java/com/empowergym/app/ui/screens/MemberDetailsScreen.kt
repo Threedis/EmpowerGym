@@ -1,13 +1,20 @@
 package com.empowergym.app.ui.screens
 
+import android.graphics.BitmapFactory
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,8 +26,14 @@ import com.empowergym.app.ui.theme.PrimaryBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MemberDetailsScreen(memberId: String, onBack: () -> Unit, onUpdateFees: () -> Unit) {
+fun MemberDetailsScreen(
+    memberId: String,
+    onBack: () -> Unit,
+    onUpdateFees: () -> Unit,
+    onDeleted: () -> Unit = onBack
+) {
     val member = MemberRepository.members.find { it.id == memberId } ?: return
+    var showDeleteConfirm by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -28,6 +41,11 @@ fun MemberDetailsScreen(memberId: String, onBack: () -> Unit, onUpdateFees: () -
                 title = { Text("Member Details") },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.Filled.ArrowBack, contentDescription = "Back") }
+                },
+                actions = {
+                    IconButton(onClick = { showDeleteConfirm = true }) {
+                        Icon(Icons.Filled.Delete, contentDescription = "Delete member", tint = Color(0xFFD32F2F))
+                    }
                 }
             )
         }
@@ -36,11 +54,18 @@ fun MemberDetailsScreen(memberId: String, onBack: () -> Unit, onUpdateFees: () -
             modifier = Modifier.padding(padding).padding(16.dp).fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            val bitmap = remember(member.photoPath) {
+                member.photoPath?.let { path -> BitmapFactory.decodeFile(path)?.asImageBitmap() }
+            }
             Box(
                 modifier = Modifier.size(90.dp).clip(CircleShape).background(PrimaryBlue.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Filled.Person, contentDescription = null, modifier = Modifier.size(56.dp), tint = PrimaryBlue)
+                if (bitmap != null) {
+                    Image(bitmap = bitmap, contentDescription = "Member photo", modifier = Modifier.size(90.dp).clip(CircleShape))
+                } else {
+                    Icon(Icons.Filled.Person, contentDescription = null, modifier = Modifier.size(56.dp), tint = PrimaryBlue)
+                }
             }
             Spacer(Modifier.height(8.dp))
             Text(member.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -82,6 +107,24 @@ fun MemberDetailsScreen(memberId: String, onBack: () -> Unit, onUpdateFees: () -
                 Text("UPDATE FEES")
             }
         }
+    }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Delete member?") },
+            text = { Text("This will permanently remove ${member.name} (${member.id}). This can't be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    MemberRepository.deleteMember(member.id)
+                    showDeleteConfirm = false
+                    onDeleted()
+                }) { Text("Delete", color = Color(0xFFD32F2F)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancel") }
+            }
+        )
     }
 }
 

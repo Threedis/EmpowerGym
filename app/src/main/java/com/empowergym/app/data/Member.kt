@@ -1,6 +1,8 @@
 package com.empowergym.app.data
 
 import androidx.compose.runtime.mutableStateListOf
+import java.text.SimpleDateFormat
+import java.util.*
 
 enum class MembershipType { CARDIO, STRENGTH }
 
@@ -22,62 +24,25 @@ data class Member(
     val pkg: PackageType,
     val paidMonths: Int = 0,
     val totalMonths: Int = 12,
-    val photoUrl: String? = null
+    val photoPath: String? = null // local file path of captured photo, if any
 )
 
 object MemberRepository {
-    val members = mutableStateListOf(
-        Member(
-            id = "ES2026072001",
-            name = "Rahul Sharma",
-            whatsapp = "9876543210",
-            alternate = "9876501234",
-            joiningDate = "21 Jul 2026",
-            type = MembershipType.CARDIO,
-            pkg = PackageType.MONTHLY,
-            paidMonths = 6
-        ),
-        Member(
-            id = "ES2026072002",
-            name = "Amit Kumar",
-            whatsapp = "9876543211",
-            joiningDate = "18 Jul 2026",
-            type = MembershipType.STRENGTH,
-            pkg = PackageType.QUARTERLY,
-            paidMonths = 3
-        ),
-        Member(
-            id = "ES2026072003",
-            name = "Rohit Singh",
-            whatsapp = "9876543212",
-            joiningDate = "10 Jul 2026",
-            type = MembershipType.CARDIO,
-            pkg = PackageType.YEARLY,
-            paidMonths = 12
-        ),
-        Member(
-            id = "ES2026072004",
-            name = "Neha Verma",
-            whatsapp = "9876543213",
-            joiningDate = "05 Jul 2026",
-            type = MembershipType.CARDIO,
-            pkg = PackageType.HALF_YEARLY,
-            paidMonths = 4
-        ),
-        Member(
-            id = "ES2026072005",
-            name = "Pooja Patel",
-            whatsapp = "9876543214",
-            joiningDate = "01 Jul 2026",
-            type = MembershipType.STRENGTH,
-            pkg = PackageType.QUARTERLY,
-            paidMonths = 1
-        )
-    )
+    // Starts empty — no dummy/sample data. Real members are added via Register Member.
+    val members = mutableStateListOf<Member>()
 
     fun nextMemberId(): String {
-        val today = "20260723" // yyyymmdd placeholder, formatted at call site normally
+        val today = SimpleDateFormat("yyyyMMdd", Locale.US).format(Date())
         val count = members.size + 1
-        return "ES$today${count.toString().padStart(2, '0')}"
+        return "ES$today${count.toString().padStart(3, '0')}"
+    }
+
+    fun deleteMember(id: String) {
+        members.removeAll { it.id == id }
+    }
+
+    fun updateMember(updated: Member) {
+        val idx = members.indexOfFirst { it.id == updated.id }
+        if (idx != -1) members[idx] = updated
     }
 }
