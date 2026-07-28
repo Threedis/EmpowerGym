@@ -113,7 +113,8 @@ fun EmpowerGymApp() {
                 MemberDetailsScreen(
                     memberId = memberId,
                     onBack = { navController.popBackStack() },
-                    onUpdateFees = { navController.navigate("feeUpdate/$memberId") }
+                    onUpdateFees = { navController.navigate("feeUpdate/$memberId") },
+                    onDeleted = { navController.popBackStack() }
                 )
             }
             composable(Screen.FeeUpdate.route) { entry ->
