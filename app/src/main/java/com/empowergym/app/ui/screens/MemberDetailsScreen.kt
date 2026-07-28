@@ -34,6 +34,9 @@ fun MemberDetailsScreen(
 ) {
     val member = MemberRepository.members.find { it.id == memberId } ?: return
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    val launchCamera = rememberCameraCapture { path ->
+        MemberRepository.updateMember(member.copy(photoPath = path))
+    }
 
     Scaffold(
         topBar = {
@@ -66,6 +69,11 @@ fun MemberDetailsScreen(
                 } else {
                     Icon(Icons.Filled.Person, contentDescription = null, modifier = Modifier.size(56.dp), tint = PrimaryBlue)
                 }
+            }
+            TextButton(onClick = { launchCamera() }) {
+                Icon(Icons.Filled.CameraAlt, contentDescription = null)
+                Spacer(Modifier.width(6.dp))
+                Text(if (bitmap != null) "Retake Photo" else "Capture Photo")
             }
             Spacer(Modifier.height(8.dp))
             Text(member.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)

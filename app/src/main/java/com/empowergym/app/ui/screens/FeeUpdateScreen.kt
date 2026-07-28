@@ -119,7 +119,7 @@ fun FeeUpdateScreen(memberId: String, onBack: () -> Unit, onUpdated: () -> Unit)
                         }
                         val newPaidMonths = (member.paidMonths + selected.size * unitMonths)
                             .coerceAtMost(member.totalMonths)
-                        MemberRepository.members[memberIndex] = member.copy(paidMonths = newPaidMonths)
+                        MemberRepository.updateMember(member.copy(paidMonths = newPaidMonths))
                         onUpdated()
                     }
                 },

@@ -21,6 +21,9 @@ import com.empowergym.app.ui.theme.SecondaryGreen
 fun DashboardScreen(onRegisterMember: () -> Unit, onCollectFees: () -> Unit) {
     val members = MemberRepository.members
     val feesDue = members.count { it.paidMonths < it.totalMonths }
+    val fullyPaid = members.count { it.paidMonths >= it.totalMonths }
+    // "Expiring soon" = paid but within 1 unit of running out (a simple, real heuristic instead of a fake number)
+    val expiringSoon = members.count { it.paidMonths in 1 until it.totalMonths && it.totalMonths - it.paidMonths <= 1 }
 
     LazyColumn(
         modifier = Modifier
@@ -41,8 +44,8 @@ fun DashboardScreen(onRegisterMember: () -> Unit, onCollectFees: () -> Unit) {
         }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                StatCard(Modifier.weight(1f), Icons.Filled.CheckCircle, "Paid Today", "12", SecondaryGreen)
-                StatCard(Modifier.weight(1f), Icons.Filled.CalendarMonth, "Expiring", "5", Color(0xFFF9A825))
+                StatCard(Modifier.weight(1f), Icons.Filled.CheckCircle, "Fully Paid", fullyPaid.toString(), SecondaryGreen)
+                StatCard(Modifier.weight(1f), Icons.Filled.CalendarMonth, "Expiring Soon", expiringSoon.toString(), Color(0xFFF9A825))
             }
         }
         item {
@@ -69,25 +72,31 @@ fun DashboardScreen(onRegisterMember: () -> Unit, onCollectFees: () -> Unit) {
             }
         }
         item {
-            Text("Recent Activities", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("Recent Members", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         }
-        items(
-            listOf(
-                Triple(Icons.Filled.Person, "Rahul Joined", "Today"),
-                Triple(Icons.Filled.AttachMoney, "Ajay Paid July Fees", "Today"),
-                Triple(Icons.Filled.Person, "Aman Registered", "Yesterday")
-            )
-        ) { (icon, text, time) ->
-            Card(shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(icon, contentDescription = null, tint = PrimaryBlue)
-                    Spacer(Modifier.width(12.dp))
-                    Column {
-                        Text(text, fontWeight = FontWeight.Medium)
-                        Text(time, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+        if (members.isEmpty()) {
+            item {
+                Card(shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.Info, contentDescription = null, tint = Color.Gray)
+                        Spacer(Modifier.width(12.dp))
+                        Text("No members registered yet", color = Color.Gray)
+                    }
+                }
+            }
+        } else {
+            items(members.takeLast(5).reversed(), key = { it.id }) { member ->
+                Card(shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Filled.Person, contentDescription = null, tint = PrimaryBlue)
+                        Spacer(Modifier.width(12.dp))
+                        Column {
+                            Text(member.name, fontWeight = FontWeight.Medium)
+                            Text("${member.joiningDate} \u2022 ${member.pkg.label}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                        }
                     }
                 }
             }

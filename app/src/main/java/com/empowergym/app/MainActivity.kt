@@ -14,6 +14,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.empowergym.app.data.AppContextHolder
+import com.empowergym.app.data.MemberRepository
 import com.empowergym.app.ui.screens.*
 import com.empowergym.app.ui.theme.EmpowerGymTheme
 
@@ -32,6 +34,8 @@ sealed class Screen(val route: String, val label: String) {
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppContextHolder.appContext = applicationContext
+        MemberRepository.load()
         setContent {
             EmpowerGymTheme {
                 EmpowerGymApp()
@@ -83,7 +87,7 @@ fun EmpowerGymApp() {
             composable(Screen.Dashboard.route) {
                 DashboardScreen(
                     onRegisterMember = { navController.navigate(Screen.Register.route) },
-                    onCollectFees = { navController.navigate(Screen.Members.route) }
+                    onCollectFees = { navController.navigate(Screen.Fees.route) }
                 )
             }
             composable(Screen.Members.route) {
@@ -95,9 +99,8 @@ fun EmpowerGymApp() {
                 )
             }
             composable(Screen.Fees.route) {
-                MembersListScreen(
-                    onOpenMember = { memberId -> navController.navigate("member/$memberId") },
-                    onAddMember = { navController.navigate(Screen.Register.route) }
+                FeesScreen(
+                    onCollectFee = { memberId -> navController.navigate("feeUpdate/$memberId") }
                 )
             }
             composable(Screen.Reports.route) { ReportsScreen() }
