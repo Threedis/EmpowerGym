@@ -2,6 +2,7 @@ package com.empowergym.app.ui.screens
 
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -36,6 +37,10 @@ fun RegisterMemberScreen(onBack: () -> Unit, onRegistered: () -> Unit) {
     val memberId = remember { MemberRepository.nextMemberId() }
     var photoPath by remember { mutableStateOf<String?>(null) }
 
+    var joiningDateMillis by remember { mutableStateOf(System.currentTimeMillis()) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.US) }
+
     val launchCamera = rememberCameraCapture { path -> photoPath = path }
 
     Scaffold(
@@ -63,10 +68,17 @@ fun RegisterMemberScreen(onBack: () -> Unit, onRegistered: () -> Unit) {
             LabeledField("Alternate Number", alternate, onValueChange = { alternate = it })
 
             Text("Joining Date", fontWeight = FontWeight.Medium)
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .clickable { showDatePicker = true }
+                    .padding(vertical = 8.dp)
+            ) {
                 Icon(Icons.Filled.CalendarMonth, contentDescription = null)
                 Spacer(Modifier.width(6.dp))
-                Text(remember { SimpleDateFormat("dd-MMM-yyyy", Locale.US).format(Date()) })
+                Text(dateFormatter.format(Date(joiningDateMillis)))
             }
 
             Text("Membership Type *", fontWeight = FontWeight.Medium)
@@ -123,7 +135,7 @@ fun RegisterMemberScreen(onBack: () -> Unit, onRegistered: () -> Unit) {
                                 name = name,
                                 whatsapp = whatsapp,
                                 alternate = alternate,
-                                joiningDate = SimpleDateFormat("dd MMM yyyy", Locale.US).format(Date()),
+                                joiningDate = dateFormatter.format(Date(joiningDateMillis)),
                                 type = type,
                                 pkg = pkg,
                                 photoPath = photoPath
@@ -138,6 +150,24 @@ fun RegisterMemberScreen(onBack: () -> Unit, onRegistered: () -> Unit) {
                 Text("REGISTER MEMBER")
             }
             Spacer(Modifier.height(16.dp))
+        }
+    }
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = joiningDateMillis)
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { joiningDateMillis = it }
+                    showDatePicker = false
+                }) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+            }
+        ) {
+            DatePicker(state = datePickerState)
         }
     }
 }
