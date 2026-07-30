@@ -25,8 +25,10 @@ fun DashboardScreen(onRegisterMember: () -> Unit, onCollectFees: () -> Unit) {
     // "Expiring soon" = paid but within 1 unit of running out (a simple, real heuristic instead of a fake number)
     val expiringSoon = members.count { it.paidMonths in 1 until it.totalMonths && it.totalMonths - it.paidMonths <= 1 }
 
+    Scaffold(topBar = { EmpowerTopBar("Dashboard") }) { padding ->
     LazyColumn(
         modifier = Modifier
+            .padding(padding)
             .fillMaxSize()
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -102,6 +104,7 @@ fun DashboardScreen(onRegisterMember: () -> Unit, onCollectFees: () -> Unit) {
             }
         }
         item { Spacer(Modifier.height(24.dp)) }
+    }
     }
 }
 

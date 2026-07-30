@@ -33,8 +33,8 @@ fun MembersListScreen(onOpenMember: (String) -> Unit, onAddMember: () -> Unit) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Members") },
+            EmpowerTopBar(
+                pageTitle = "Members",
                 actions = {
                     IconButton(onClick = onAddMember) {
                         Icon(Icons.Filled.Add, contentDescription = "Add Member")

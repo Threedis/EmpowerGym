@@ -47,8 +47,8 @@ fun FeeUpdateScreen(memberId: String, onBack: () -> Unit, onUpdated: () -> Unit)
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Fee Update") },
+            EmpowerTopBar(
+                pageTitle = "Fee Update",
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.Filled.ArrowBack, contentDescription = "Back") }
                 }

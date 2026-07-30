@@ -45,8 +45,8 @@ fun RegisterMemberScreen(onBack: () -> Unit, onRegistered: () -> Unit) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Register Member") },
+            EmpowerTopBar(
+                pageTitle = "Register Member",
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")

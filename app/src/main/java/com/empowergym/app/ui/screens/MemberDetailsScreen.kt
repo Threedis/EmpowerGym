@@ -40,8 +40,8 @@ fun MemberDetailsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Member Details") },
+            EmpowerTopBar(
+                pageTitle = "Member Details",
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.Filled.ArrowBack, contentDescription = "Back") }
                 },

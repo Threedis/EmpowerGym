@@ -34,7 +34,7 @@ fun FeesScreen(onCollectFee: (String) -> Unit) {
     val paidUp = members.filter { it.paidMonths >= it.totalMonths }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Fees") }) }
+        topBar = { EmpowerTopBar("Fees") }
     ) { padding ->
         if (members.isEmpty()) {
             Box(modifier = Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) {

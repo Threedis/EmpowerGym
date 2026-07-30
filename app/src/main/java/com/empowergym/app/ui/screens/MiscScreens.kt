@@ -21,8 +21,9 @@ fun WhatsAppConfirmScreen(onDone: () -> Unit) {
     var notifyMember by remember { mutableStateOf(true) }
     var notifyOwner by remember { mutableStateOf(true) }
 
+    Scaffold(topBar = { EmpowerTopBar("Payment Confirmation") }) { padding ->
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        modifier = Modifier.padding(padding).fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(Modifier.height(32.dp))
@@ -63,6 +64,7 @@ fun WhatsAppConfirmScreen(onDone: () -> Unit) {
             Text("SEND")
         }
     }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -78,7 +80,7 @@ fun ReportsScreen() {
         "Strength" to members.count { it.type.name == "STRENGTH" }
     )
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Reports") }) }) { padding ->
+    Scaffold(topBar = { EmpowerTopBar("Reports") }) { padding ->
         if (members.isEmpty()) {
             Box(modifier = Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -136,7 +138,7 @@ private fun ReportStat(modifier: Modifier, label: String, value: String, color: 
 fun SettingsScreen() {
     var showClearConfirm by remember { mutableStateOf(false) }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Settings") }) }) { padding ->
+    Scaffold(topBar = { EmpowerTopBar("Settings") }) { padding ->
         Column(modifier = Modifier.padding(padding).padding(16.dp)) {
             Card(shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
